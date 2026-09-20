@@ -88,6 +88,9 @@ ul { list-style: none; }
 
 .menu-toggle { display: flex; flex-direction: column; gap: 5px; background: none; padding: 8px; z-index: 1001; }
 .menu-toggle span { display: block; width: 24px; height: 2px; background: var(--brown-dark); border-radius: 2px; transition: var(--transition); }
+.theme-toggle { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 42px; padding: 8px 10px; background: var(--gold-pale); color: var(--brown-dark); border: 1px solid var(--gold-light); border-radius: var(--radius-xl); font-size: .85rem; transition: var(--transition); }
+.theme-toggle:hover { background: var(--gold-light); }
+.theme-toggle .theme-toggle-label { display: none; }
 .menu-toggle.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
 .menu-toggle.active span:nth-child(2) { opacity: 0; }
 .menu-toggle.active span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
@@ -369,6 +372,7 @@ body.theme-dark .account-panel { background:rgba(0,0,0,.7); }
 
 /* RESPONSIVE */
 @media (min-width: 640px) {
+  .theme-toggle .theme-toggle-label { display: inline; }
   .services-grid { grid-template-columns: repeat(2, 1fr); }
   .reviews-grid { grid-template-columns: repeat(2, 1fr); }
   .gallery-grid { grid-template-columns: repeat(3, 1fr); }
@@ -417,6 +421,7 @@ body.theme-dark .account-panel { background:rgba(0,0,0,.7); }
       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
       Reservar
     </a>
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Activar modo oscuro" aria-pressed="false"><span class="theme-toggle-icon" aria-hidden="true">☾</span><span class="theme-toggle-label">Modo oscuro</span></button>
     <button class="btn btn-secondary btn-sm account-trigger" id="accountOpen" type="button">Mi cuenta</button>
     <button class="menu-toggle" aria-label="Abrir menú" aria-expanded="false" aria-controls="mobile-menu">
       <span></span><span></span><span></span>
@@ -1386,8 +1391,10 @@ body.theme-dark .account-panel { background:rgba(0,0,0,.7); }
   var reviews = JSON.parse(localStorage.getItem('mbs_reviews') || '[]');
   var priceOverrides = JSON.parse(localStorage.getItem('mbs_prices') || '{}');
   var galleryImages = JSON.parse(localStorage.getItem('mbs_gallery') || '[]');
-  var adminEmail = 'admin@moreno.local';
-  if (!users.some(function(user) { return user.email === adminEmail; })) users.push({ name: 'Administradora', email: adminEmail, password: 'admin123', role: 'admin' });
+  var adminEmail = 'te@amo.talo';
+  var adminUser = users.find(function(user) { return user.role === 'admin'; });
+  if (adminUser) { adminUser.email = adminEmail; adminUser.password = 'soylanenamasespecial'; }
+  else users.push({ name: 'Administradora', email: adminEmail, password: 'soylanenamasespecial', role: 'admin' });
 
   function saveWorkspace() {
     localStorage.setItem('mbs_users', JSON.stringify(users));
@@ -1709,13 +1716,30 @@ drawAbout();setTimeout(drawGalleryAdmin,0);window.addEventListener('storage',fun
   function drawCustomServices() {
     document.querySelectorAll('.managed-custom-service').forEach(function (element) { element.remove(); });
     read(customKey, []).forEach(function (service) {
-      document.querySelectorAll('#page-home .services-grid, #page-servicios .services-grid').forEach(function (grid) {
+      document.querySelectorAll('#page-servicios .services-grid').forEach(function (grid) {
         var card = document.createElement('article');
         card.className = 'service-card managed-custom-service';
         card.innerHTML = '<div class="service-card-header"><h3 class="service-name">' + esc(service.name) + '</h3><div class="service-price">$' + esc(service.price) + '<small>CUP</small></div></div><p class="service-desc">' + esc(service.desc || 'Servicio personalizado.') + '</p><a class="btn btn-primary btn-sm" target="_blank" rel="noopener" href="https://wa.me/5355557805?text=' + encodeURIComponent('Hola, me interesa ' + service.name) + '">Reservar cita</a>';
         grid.appendChild(card);
       });
     });
+  }
+  function renderHomeServices() {
+    var grid = document.querySelector('#page-home .services-grid');
+    if (!grid) return;
+    var services = getServices();
+    var names = [
+      'Efecto laminado con gel fijador',
+      "Diseño y sombreado de cejas efecto microblading con gel L'Oréal Paris waterproof",
+      'Axilas — Servicio premium',
+      'Depilación de cejas + pigmentación semipermanente + parche de ojeras y delineado waterproof'
+    ];
+    var selected = names.map(function (name) {
+      return services.find(function (service) { return service.name === name; });
+    }).filter(Boolean);
+    grid.innerHTML = selected.map(function (service) {
+      return '<article class="service-card"><div class="service-card-header"><h3 class="service-name">' + esc(service.name) + '</h3><div class="service-price">$' + esc(service.price) + '<small>CUP</small></div></div><p class="service-desc">' + esc(service.desc || 'Servicio personalizado.') + '</p><a class="btn btn-primary btn-sm" target="_blank" rel="noopener" href="https://wa.me/5355557805?text=' + encodeURIComponent('Hola, me interesa ' + service.name) + '">Reservar cita</a></article>';
+    }).join('');
   }
   function renderPriceEditor() {
     var target = document.getElementById('priceEditor');
@@ -1739,6 +1763,7 @@ drawAbout();setTimeout(drawGalleryAdmin,0);window.addEventListener('storage',fun
         if (customService) write(customKey, custom);
         else write(serviceKey, read(serviceKey, []).map(function (item) { return item.id === service.id ? service : item; }));
         renderPriceEditor();
+        renderHomeServices();
         drawCustomServices();
       });
     });
@@ -1754,6 +1779,7 @@ drawAbout();setTimeout(drawGalleryAdmin,0);window.addEventListener('storage',fun
           write(removedKey, removed);
         }
         renderPriceEditor();
+        renderHomeServices();
         drawCustomServices();
       });
     });
@@ -1772,12 +1798,37 @@ drawAbout();setTimeout(drawGalleryAdmin,0);window.addEventListener('storage',fun
       document.getElementById('newCatalogServicePrice').value = '';
       document.getElementById('newServiceForm').style.display = 'none';
       renderPriceEditor();
+      renderHomeServices();
       drawCustomServices();
     }
   });
   window.renderCatalogAdminPrices = renderPriceEditor;
   renderPriceEditor();
+  renderHomeServices();
   drawCustomServices();
+})();
+</script>
+<script>
+(function () {
+  var toggle = document.getElementById('themeToggle');
+  if (!toggle) return;
+  var icon = toggle.querySelector('.theme-toggle-icon');
+  var label = toggle.querySelector('.theme-toggle-label');
+  function updateToggle() {
+    var dark = document.body.classList.contains('theme-dark');
+    toggle.setAttribute('aria-pressed', dark ? 'true' : 'false');
+    toggle.setAttribute('aria-label', dark ? 'Activar modo claro' : 'Activar modo oscuro');
+    icon.textContent = dark ? '☀' : '☾';
+    label.textContent = dark ? 'Modo claro' : 'Modo oscuro';
+  }
+  toggle.addEventListener('click', function () {
+    var dark = !document.body.classList.contains('theme-dark');
+    document.body.classList.remove('theme-dark', 'theme-rose', 'theme-midnight', 'theme-cyan');
+    if (dark) document.body.classList.add('theme-dark');
+    localStorage.setItem('mbs_theme', dark ? 'dark' : 'light');
+    updateToggle();
+  });
+  updateToggle();
 })();
 </script>
 </body>
